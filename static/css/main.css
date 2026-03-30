@@ -567,13 +567,16 @@ input, select { font-family: inherit; font-size: inherit; }
 }
 
 /* Message body */
-.msg-body {
+.msg-content {
   display: flex;
   flex-direction: column;
   max-width: calc(100% - 56px - 56px);
   min-width: 0;
 }
-.msg-row.right .msg-body { align-items: flex-end; }
+.msg-row.right .msg-content {
+  display: inline-block;
+  text-align: right;
+}
 
 /* Nickname */
 .msg-nick {
@@ -582,10 +585,19 @@ input, select { font-family: inherit; font-size: inherit; }
   margin-bottom: 3px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+   text-overflow: ellipsis;
+  max-width: 200px;
 }
-.msg-row.right .msg-nick { text-align: right; }
+.msg-row.right .msg-nick {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  text-align: right;
+  display: block;
+}
 
 /* Bubble */
 .msg-bubble {
@@ -789,7 +801,6 @@ input, select { font-family: inherit; font-size: inherit; }
   border-color: rgba(22,119,255,.5);
 }
 /* Right-side messages: align button to the right */
-.msg-row.right .ctx-btn { align-self: flex-end; }
 
 /* ===== Message highlight animation (context jump target) ===== */
 @keyframes msg-flash {
@@ -966,3 +977,4 @@ input, select { font-family: inherit; font-size: inherit; }
   color: #666;
   margin-bottom: 12px;
 }
+
