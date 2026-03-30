@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QQ 聊天记录查看器</title>
+<link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body class="chat-page">
+
+<div class="sidebar-layout">
+  <!-- Left panel: conversation list -->
+  <div class="conv-panel">
+    <div class="conv-header">
+      <div class="conv-header-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        聊天记录
+      </div>
+      <div class="conv-search-wrap">
+        <input type="text" id="convSearch" placeholder="搜索联系人..." class="conv-search-input">
+      </div>
+    </div>
+    <div class="conv-tabs">
+      <button class="conv-tab active" data-kind="all">全部</button>
+      <button class="conv-tab" data-kind="buddy">好友</button>
+      <button class="conv-tab" data-kind="group">群组</button>
+    </div>
+    <div class="conv-list" id="convList">
+      <div class="conv-loading">加载中...</div>
+    </div>
+  </div>
+
+  <!-- Right panel: chat view -->
+  <div class="main-panel" id="mainPanel">
+    <!-- Chat header (hidden until a chat is selected) -->
+    <div class="chat-header" id="chatHeader" style="display:none">
+      <div class="chat-header-info">
+        <span class="chat-title" id="chatTitle"></span>
+        <span class="chat-subtitle" id="chatSubtitle"></span>
+      </div>
+      <div class="chat-header-actions">
+        <div class="search-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="searchInput" placeholder="搜索消息..." class="search-input">
+          <!-- Multi-select sender filter (custom dropdown) -->
+          <div class="sender-multiselect" id="senderMultiselect">
+            <button type="button" class="sender-ms-trigger" id="senderMsTrigger" title="按发言人过滤">
+              <span id="senderMsLabel">全部成员</span>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M1 3l4 4 4-4"/></svg>
+            </button>
+            <div class="sender-ms-dropdown" id="senderMsDropdown" style="display:none">
+              <div class="sender-ms-header">
+                <label class="sender-ms-item">
+                  <input type="checkbox" id="senderMsAll" checked> 全部成员
+                </label>
+              </div>
+              <div class="sender-ms-search">
+                <input type="text" id="senderMsSearch" placeholder="搜索成员..." autocomplete="off">
+              </div>
+              <div class="sender-ms-list" id="senderMsList"></div>
+            </div>
+          </div>
+          <button class="btn-icon" id="searchBtn" title="搜索">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <button class="btn-icon" id="clearSearchBtn" title="清除搜索" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="time-jump">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <input type="datetime-local" id="timeJumpInput" class="time-input" title="跳转到指定时间">
+          <button class="btn-icon" id="timeJumpBtn" title="跳转">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+        <button class="btn-icon" id="exportBtn" title="导出聊天记录" style="color:#4a90d9">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
+        <button class="btn-icon" id="settingsToggle" title="设置">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings panel (collapsible) -->
+    <div class="settings-panel" id="settingsPanel" style="display:none">
+      <div class="settings-inner">
+        <div class="form-row-inline">
+          <label>我的 QQ 号</label>
+          <input type="text" id="myQQ" placeholder="输入你的QQ号" class="settings-input-sm">
+        </div>
+        <div class="form-row-inline">
+          <label class="toggle-label">
+            <input type="checkbox" id="bubbleRight" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span>自己的消息显示在右侧</span>
+        </div>
+        <div class="form-row-inline">
+          <label class="toggle-label">
+            <input type="checkbox" id="showRawID">
+            <span class="toggle-slider"></span>
+          </label>
+          <span>在侧边栏显示群原始ID</span>
+        </div>
+        <div class="form-row-inline">
+          <label>图片目录</label>
+          <input type="text" id="imageBaseDir" placeholder="用户图片父目录" class="settings-input-sm settings-input-wide">
+        </div>
+        <button class="btn-primary-sm" id="saveSettings">保存</button>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+    </div>
+
+    <!-- Welcome screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#c0c0c0" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      </div>
+      <p class="welcome-text">选择一个联系人或群组查看聊天记录</p>
+    </div>
+
+    <!-- Messages area -->
+    <div class="messages-area" id="messagesArea" style="display:none"></div>
+
+    <!-- Loading overlay inside messages area -->
+    <div class="msg-loading-overlay" id="msgLoading" style="display:none">
+      <div class="spinner"></div>
+      <span>加载中...</span>
+    </div>
+
+    <!-- Pagination bar -->
+    <div class="pagination-bar" id="paginationBar" style="display:none">
+      <div class="page-info" id="pageInfo"></div>
+      <div class="page-controls">
+        <button class="btn-page" id="btnFirst" title="第一页">«</button>
+        <button class="btn-page" id="btnPrev" title="上一页">‹</button>
+        <span class="page-num" id="pageNum"></span>
+        <button class="btn-page" id="btnNext" title="下一页">›</button>
+        <button class="btn-page" id="btnLast" title="最后一页">»</button>
+        <span class="page-size-wrap">
+          每页
+          <select id="pageSizeSelect" class="page-size-select">
+            <option value="30">30</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
+          条
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export dialog -->
+<div class="modal-overlay" id="exportModal" style="display:none" onclick="closeExportModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>导出聊天记录</h3>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Tab switcher -->
+      <div class="export-tabs">
+        <button class="export-tab active" id="exportTabPage" onclick="switchExportTab('page')">导出当前页</button>
+        <button class="export-tab" id="exportTabBulk" onclick="switchExportTab('bulk')">批量导出</button>
+      </div>
+
+      <!-- Page export -->
+      <div id="exportPagePanel">
+        <p class="export-desc">将当前可见的聊天记录（当前过滤条件、当前页）导出为 MHTML 文件。</p>
+        <div class="export-info" id="exportPageInfo"></div>
+        <button class="btn-primary" id="exportPageBtn" onclick="doExportPage()">下载 MHTML</button>
+      </div>
+
+      <!-- Bulk export -->
+      <div id="exportBulkPanel" style="display:none">
+        <p class="export-desc">按条件导出全量聊天记录，打包为 ZIP（每块一个 MHTML 文件）。</p>
+        <div class="export-form">
+          <div class="form-row">
+            <label>关键词</label>
+            <input type="text" id="bulkKeyword" placeholder="留空则不限制" class="export-input">
+          </div>
+          <div class="form-row">
+            <label>开始时间</label>
+            <input type="datetime-local" id="bulkTimeFrom" class="export-input">
+          </div>
+          <div class="form-row">
+            <label>结束时间</label>
+            <input type="datetime-local" id="bulkTimeTo" class="export-input">
+          </div>
+          <div class="form-row">
+            <label>发言人</label>
+            <div class="export-sender-wrap" id="exportSenderWrap">
+              <p class="export-sender-hint">（留空则导出全部成员）</p>
+              <div id="exportSenderList" class="export-sender-list"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>每块条数</label>
+            <input type="number" id="bulkChunkSize" value="500" min="50" max="5000" class="export-input export-input-sm">
+          </div>
+        </div>
+        <div class="export-progress" id="exportProgress" style="display:none">
+          <div class="spinner"></div>
+          <span>正在生成，请稍候...</span>
+        </div>
+        <button class="btn-primary" id="exportBulkBtn" onclick="doExportBulk()">生成 ZIP 并下载</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox for image preview -->
+<div class="lightbox" id="lightbox" style="display:none" onclick="closeLightbox()">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+  <img id="lightboxImg" src="" alt="图片预览" onclick="event.stopPropagation()">
+</div>
+
+<!-- Server-side config passed to JS -->
+<script>
+  window.SERVER_CONFIG = {
+    my_qq: {{.Config.User.MyQQ}},
+    bubble_on_right: {{.Config.User.BubbleOnRight}},
+    image_base_dir: {{printf "%q" .Config.Images.BaseDir}}
+  };
+</script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

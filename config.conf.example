@@ -1,0 +1,32 @@
+# QQ 聊天记录查看器配置文件 (示例)
+
+[server]
+# 监听地址
+host = "127.0.0.1"
+# 监听端口
+port = 8080
+
+[database]
+# 已解密的 QQ SQLite 数据库文件路径
+# 例如: 'C:\Users\YourName\Documents\Msg3.0-decoded.db' (Windows)
+path = 'Msg3.0-decoded.db'
+
+[user]
+# 你自己的 QQ 号（你发送的消息将用不同颜色显示）
+# 设为 0 表示不区分
+my_qq = 123456789
+# 是否将自己的消息显示在右侧（true = 右侧绿色气泡，类似 QQ/微信风格）
+bubble_on_right = true
+
+[cache]
+# 头像和昵称缓存目录
+# 留空则使用默认目录（用户主目录下的 .qqviewer_cache）
+dir = "qqviewer_cache"
+# 头像 API 请求速率限制（每秒最多请求次数）
+avatar_rate_limit = 2.0
+
+[images]
+# 用户图片文件的父目录（包含 Image71\ 等子目录的上级目录）
+# 例如: "C:\\Users\\YourName\\Documents\\Tencent Files\\123456789\\Image"
+# 留空则不显示用户图片
+base_dir = ""
